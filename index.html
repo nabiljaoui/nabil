@@ -3,47 +3,110 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vidora AI - Video Generator</title>
+<title>Vidora AI - Image to Video & Text to Video</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#0a0a0a;color:#fff;min-height:100vh}
-header{padding:20px 40px;display:flex;justify-content:space-between;align-items:center}
-.logo{font-size:28px;font-weight:800;background:linear-gradient(90deg,#8b5cf6,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.btn{background:#fff;color:#000;padding:12px 24px;border-radius:999px;font-weight:600;border:none;cursor:pointer}
-.hero{text-align:center;padding:80px 20px}
-.hero h1{font-size:54px;line-height:1.1;margin-bottom:20px}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,system-ui,-apple-system,sans-serif}
+body{background:#08080a;color:#fff;min-height:100vh}
+header{padding:20px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #16161a}
+.logo{font-size:26px;font-weight:900;letter-spacing:-0.5px;background:linear-gradient(90deg,#8b5cf6,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.badge{font-size:12px;color:#666;background:#121214;border:1px solid #1e1e22;padding:6px 12px;border-radius:999px}
+.hero{text-align:center;padding:60px 20px 20px}
+.hero h1{font-size:56px;line-height:1.05;font-weight:900;letter-spacing:-1.5px}
 .hero h1 span{background:linear-gradient(90deg,#8b5cf6,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hero p{color:#888;font-size:18px;margin-bottom:30px}
-.box{max-width:700px;margin:40px auto;background:#151515;border:1px solid #222;border-radius:24px;padding:24px}
-.box textarea{width:100%;background:#0f0f0f;border:1px solid #222;border-radius:16px;padding:16px;color:#fff;height:120px;resize:none;font-size:16px}
-.box-footer{display:flex;justify-content:space-between;align-items:center;margin-top:16px}
-.generate{background:linear-gradient(90deg,#8b5cf6,#ec4899);color:#fff;padding:14px 32px;border-radius:999px;border:none;font-weight:700;cursor:pointer}
-.videos{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;padding:40px;max-width:1200px;margin:auto}
-.card{background:#151515;border-radius:20px;overflow:hidden;border:1px solid #222}
-.card div{height:160px;background:linear-gradient(135deg,#1a1a2e,#16213e);display:flex;align-items:center;justify-content:center;font-size:40px}
-.card p{padding:14px;color:#aaa}
+.hero p{color:#888;margin-top:16px;font-size:18px}
+.card{max-width:700px;margin:40px auto;background:#121214;border:1px solid #1f1f23;border-radius:28px;padding:28px;box-shadow:0 20px 80px rgba(0,0,0,0.6)}
+.tabs{display:flex;gap:8px;background:#0a0a0c;padding:6px;border-radius:999px;border:1px solid #1f1f23;margin-bottom:24px}
+.tab{flex:1;padding:12px;text-align:center;border-radius:999px;font-size:14px;font-weight:700;cursor:pointer;color:#666;transition:.2s}
+.tab.active{background:#fff;color:#000}
+.label{font-size:13px;font-weight:700;color:#aaa;margin-bottom:10px;display:block;letter-spacing:0.5px;text-transform:uppercase}
+.upload{border:2px dashed #26262b;border-radius:20px;padding:32px;text-align:center;cursor:pointer;display:block;background:#0c0c0e;transition:.2s}
+.upload:hover{border-color:#8b5cf6;background:#13131a}
+.upload input{display:none}
+.upload .ic{font-size:36px}
+.upload .t1{font-weight:700;margin-top:8px}
+.upload .t2{font-size:13px;color:#555;margin-top:6px}
+textarea{width:100%;background:#0c0c0e;border:1px solid #26262b;border-radius:18px;padding:18px;color:#fff;min-height:120px;font-size:16px;outline:none;resize:none}
+textarea:focus{border-color:#8b5cf6}
+.btn{width:100%;background:linear-gradient(90deg,#8b5cf6,#ec4899);color:#fff;padding:18px;border-radius:999px;border:none;font-weight:800;font-size:17px;margin-top:20px;cursor:pointer;transition:.2s}
+.btn:hover{transform:scale(1.02)}
+.preview{margin-top:24px;display:none;background:#0a0a0c;border:1px solid #1f1f23;border-radius:20px;overflow:hidden}
+.preview img{width:100%;max-height:360px;object-fit:cover;display:block}
+.preview .st{padding:16px;text-align:center;font-weight:600;color:#a78bfa}
+.hint{text-align:center;color:#333;font-size:12px;margin-top:16px}
 </style>
 </head>
 <body>
-<header>
-<div class="logo">VIDORA AI</div>
-<button class="btn">Get Started</button>
-</header>
+<header><div class="logo">VIDORA AI</div><div class="badge">v2.0 • Nabil Jawi</div></header>
+
 <div class="hero">
 <h1>Create amazing<br><span>videos with AI</span></h1>
-<p>Turn your ideas into stunning videos in seconds. No editing skills needed.</p>
-<div class="box">
-<textarea placeholder="Describe your video idea... e.g. A futuristic city at night with flying cars"></textarea>
-<div class="box-footer">
-<span style="color:#666">✨ Powered by AI</span>
-<button class="generate" onclick="alert('Vidora AI is ready! Connect your API next')">Generate Video →</button>
+<p>Turn any image + prompt into video, or prompt only into video</p>
+
+<div class="card">
+<div class="tabs">
+<div class="tab active" id="tab0" onclick="setMode(0)">🖼️ Image + Prompt → Video</div>
+<div class="tab" id="tab1" onclick="setMode(1)">📝 Prompt → Video</div>
+</div>
+
+<div id="imgSection">
+<span class="label">Upload Image (Optional)</span>
+<label class="upload" id="up">
+<input type="file" id="file" accept="image/*" onchange="loadImg(event)">
+<div class="ic">📤</div>
+<div class="t1" id="upT1">Drop image or click to upload</div>
+<div class="t2" id="upT2">PNG, JPG, WEBP up to 10MB. If no image, it generates from text only.</div>
+</label>
+</div>
+
+<span class="label" style="margin-top:22px">Describe your video idea</span>
+<textarea id="prompt" placeholder="e.g. A futuristic city at night with flying cars, cinematic, 4K, slow motion..."></textarea>
+
+<button class="btn" onclick="gen()">✨ Generate Video →</button>
+
+<div class="preview" id="preview">
+<img id="pImg">
+<div class="st" id="pSt"></div>
+</div>
+
+<div class="hint">✨ Powered by AI • Vidora AI • Image-to-Video & Text-to-Video</div>
 </div>
 </div>
-</div>
-<div class="videos">
-<div class="card"><div>🎬</div><p>Anime style city - 2.3k likes</p></div>
-<div class="card"><div>🚀</div><p>Space adventure - 1.8k likes</p></div>
-<div class="card"><div>🌊</div><p>Ocean waves - 3.1k likes</p></div>
-</div>
+
+<script>
+let imgData=null;
+function setMode(m){
+ document.getElementById('tab0').classList.toggle('active',m==0);
+ document.getElementById('tab1').classList.toggle('active',m==1);
+ const sec=document.getElementById('imgSection');
+ if(m==1){sec.style.opacity='0.3';sec.style.pointerEvents='none';}
+ else {sec.style.opacity='1';sec.style.pointerEvents='auto';}
+}
+function loadImg(e){
+ const f=e.target.files[0]; if(!f) return;
+ const r=new FileReader();
+ r.onload=()=>{
+   imgData=r.result;
+   document.getElementById('pImg').src=imgData;
+   document.getElementById('preview').style.display='block';
+   document.getElementById('pSt').innerText='✅ Image loaded - write prompt and generate';
+   document.getElementById('upT1').innerText='✅ '+f.name+' loaded';
+ };
+ r.readAsDataURL(f);
+}
+function gen(){
+ const p=document.getElementById('prompt').value.trim();
+ if(!p){alert('Please write your video idea!');return;}
+ const prev=document.getElementById('preview');
+ const imgEl=document.getElementById('pImg');
+ prev.style.display='block';
+ if(imgData){imgEl.style.display='block';imgEl.src=imgData;}
+ else {imgEl.style.display='none';}
+ document.getElementById('pSt').innerHTML='⏳ Generating video...<br><small style="color:#555">UI is ready! Next step connect real AI engine</small>';
+ setTimeout(()=>{
+   if(imgData) document.getElementById('pSt').innerHTML='🔥 Perfect! Image + Prompt → Video is ready<br>And Prompt → Video is ready too! ✅';
+   else document.getElementById('pSt').innerHTML='🔥 Perfect! Text → Video mode ready! ✅<br>Add an image to use Image → Video';
+ },1400);
+}
+</script>
 </body>
 </html>
