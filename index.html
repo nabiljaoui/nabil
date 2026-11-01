@@ -1,77 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vidora AI - Image to Video & Text to Video</title>
+<title>Vidora AI - Real Video Generator</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,system-ui,-apple-system,sans-serif}
-body{background:#08080a;color:#fff;min-height:100vh}
-header{padding:20px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #16161a}
-.logo{font-size:26px;font-weight:900;letter-spacing:-0.5px;background:linear-gradient(90deg,#8b5cf6,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.badge{font-size:12px;color:#666;background:#121214;border:1px solid #1e1e22;padding:6px 12px;border-radius:999px}
-.hero{text-align:center;padding:60px 20px 20px}
-.hero h1{font-size:56px;line-height:1.05;font-weight:900;letter-spacing:-1.5px}
-.hero h1 span{background:linear-gradient(90deg,#8b5cf6,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hero p{color:#888;margin-top:16px;font-size:18px}
-.card{max-width:700px;margin:40px auto;background:#121214;border:1px solid #1f1f23;border-radius:28px;padding:28px;box-shadow:0 20px 80px rgba(0,0,0,0.6)}
-.tabs{display:flex;gap:8px;background:#0a0a0c;padding:6px;border-radius:999px;border:1px solid #1f1f23;margin-bottom:24px}
-.tab{flex:1;padding:12px;text-align:center;border-radius:999px;font-size:14px;font-weight:700;cursor:pointer;color:#666;transition:.2s}
-.tab.active{background:#fff;color:#000}
-.label{font-size:13px;font-weight:700;color:#aaa;margin-bottom:10px;display:block;letter-spacing:0.5px;text-transform:uppercase}
-.upload{border:2px dashed #26262b;border-radius:20px;padding:32px;text-align:center;cursor:pointer;display:block;background:#0c0c0e;transition:.2s}
-.upload:hover{border-color:#8b5cf6;background:#13131a}
-.upload input{display:none}
-.upload .ic{font-size:36px}
-.upload .t1{font-weight:700;margin-top:8px}
-.upload .t2{font-size:13px;color:#555;margin-top:6px}
-textarea{width:100%;background:#0c0c0e;border:1px solid #26262b;border-radius:18px;padding:18px;color:#fff;min-height:120px;font-size:16px;outline:none;resize:none}
-textarea:focus{border-color:#8b5cf6}
-.btn{width:100%;background:linear-gradient(90deg,#8b5cf6,#ec4899);color:#fff;padding:18px;border-radius:999px;border:none;font-weight:800;font-size:17px;margin-top:20px;cursor:pointer;transition:.2s}
-.btn:hover{transform:scale(1.02)}
-.preview{margin-top:24px;display:none;background:#0a0a0c;border:1px solid #1f1f23;border-radius:20px;overflow:hidden}
-.preview img{width:100%;max-height:360px;object-fit:cover;display:block}
-.preview .st{padding:16px;text-align:center;font-weight:600;color:#a78bfa}
-.hint{text-align:center;color:#333;font-size:12px;margin-top:16px}
+body{background:#0a0a0a;color:white;font-family:sans-serif;display:flex;justify-content:center;padding:20px}
+.card{background:#1a1a1a;border-radius:20px;padding:20px;width:100%;max-width:400px;border:1px solid #333}
+textarea{width:100%;height:100px;background:#222;color:white;border:1px solid #444;border-radius:12px;padding:12px;margin:15px 0}
+.btn{width:100%;background:linear-gradient(90deg,#8b5cf6,#ec4899);border:none;padding:15px;border-radius:12px;color:white;font-weight:bold;font-size:16px;cursor:pointer}
+.preview{margin-top:20px;display:none;text-align:center}
+.preview video{width:100%;border-radius:12px;margin-top:10px}
+.st{margin-top:10px;color:#aaa;font-size:14px}
+.tab{display:flex;gap:10px;margin-bottom:15px}
+.tab div{flex:1;text-align:center;padding:10px;background:#222;border-radius:10px;cursor:pointer}
+.tab div.active{background:#333;border:1px solid #8b5cf6}
 </style>
 </head>
 <body>
-<header><div class="logo">VIDORA AI</div><div class="badge">v2.0 • Nabil Jawi</div></header>
-
-<div class="hero">
-<h1>Create amazing<br><span>videos with AI</span></h1>
-<p>Turn any image + prompt into video, or prompt only into video</p>
-
 <div class="card">
-<div class="tabs">
-<div class="tab active" id="tab0" onclick="setMode(0)">🖼️ Image + Prompt → Video</div>
-<div class="tab" id="tab1" onclick="setMode(1)">📝 Prompt → Video</div>
+<div style="text-align:center;font-size:20px;font-weight:bold;margin-bottom:15px">✨ Vidora AI</div>
+<div class="tab">
+<div id="tab0" class="active" onclick="setMode(0)">Image → Video</div>
+<div id="tab1" onclick="setMode(1)">Text → Video</div>
 </div>
-
 <div id="imgSection">
-<span class="label">Upload Image (Optional)</span>
-<label class="upload" id="up">
-<input type="file" id="file" accept="image/*" onchange="loadImg(event)">
-<div class="ic">📤</div>
-<div class="t1" id="upT1">Drop image or click to upload</div>
-<div class="t2" id="upT2">PNG, JPG, WEBP up to 10MB. If no image, it generates from text only.</div>
-</label>
+<input type="file" id="imgInput" accept="image/*" onchange="loadImg(event)" style="width:100%;padding:10px;background:#222;border-radius:10px;border:1px dashed #555">
 </div>
-
-<span class="label" style="margin-top:22px">Describe your video idea</span>
-<textarea id="prompt" placeholder="e.g. A futuristic city at night with flying cars, cinematic, 4K, slow motion..."></textarea>
-
-<button class="btn" onclick="gen()">✨ Generate Video →</button>
-
+<textarea id="prompt" placeholder="e.g. A futuristic city at night with flying cars, cinematic, 4K..."></textarea>
+<button class="btn" id="genBtn" onclick="gen()">✨ Generate Video →</button>
 <div class="preview" id="preview">
-<img id="pImg">
+<img id="pImg" style="width:100%;border-radius:12px;display:none">
 <div class="st" id="pSt"></div>
+<video id="pVideo" controls style="display:none"></video>
 </div>
-
-<div class="hint">✨ Powered by AI • Vidora AI • Image-to-Video & Text-to-Video</div>
+<div style="text-align:center;margin-top:15px;font-size:12px;color:#666">✨ Powered by AI • Vidora AI • Real Hugging Face Engine</div>
 </div>
-</div>
-
 <script>
 let imgData=null;
 function setMode(m){
@@ -87,25 +51,48 @@ function loadImg(e){
  r.onload=()=>{
    imgData=r.result;
    document.getElementById('pImg').src=imgData;
+   document.getElementById('pImg').style.display='block';
    document.getElementById('preview').style.display='block';
-   document.getElementById('pSt').innerText='✅ Image loaded - write prompt and generate';
-   document.getElementById('upT1').innerText='✅ '+f.name+' loaded';
+   document.getElementById('pSt').innerText='✅ Image loaded';
  };
  r.readAsDataURL(f);
 }
-function gen(){
+async function gen(){
  const p=document.getElementById('prompt').value.trim();
  if(!p){alert('Please write your video idea!');return;}
- const prev=document.getElementById('preview');
- const imgEl=document.getElementById('pImg');
- prev.style.display='block';
- if(imgData){imgEl.style.display='block';imgEl.src=imgData;}
- else {imgEl.style.display='none';}
- document.getElementById('pSt').innerHTML='⏳ Generating video...<br><small style="color:#555">UI is ready! Next step connect real AI engine</small>';
- setTimeout(()=>{
-   if(imgData) document.getElementById('pSt').innerHTML='🔥 Perfect! Image + Prompt → Video is ready<br>And Prompt → Video is ready too! ✅';
-   else document.getElementById('pSt').innerHTML='🔥 Perfect! Text → Video mode ready! ✅<br>Add an image to use Image → Video';
- },1400);
+ const btn=document.getElementById('genBtn');
+ const st=document.getElementById('pSt');
+ const preview=document.getElementById('preview');
+ const video=document.getElementById('pVideo');
+ 
+ preview.style.display='block';
+ btn.innerText='⏳ Generating... Please wait 30-60s';
+ btn.disabled=true;
+ st.innerHTML='⏳ Calling Real AI Engine...<br><small>This may take 30-60 seconds, first time longer</small>';
+ video.style.display='none';
+ 
+ try{
+   const res=await fetch('/api/generate',{
+     method:'POST',
+     headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({prompt:p})
+   });
+   if(!res.ok){
+     const err=await res.json();
+     throw new Error(err.error||'Failed');
+   }
+   const blob=await res.blob();
+   const url=URL.createObjectURL(blob);
+   video.src=url;
+   video.style.display='block';
+   st.innerHTML='🔥 Video Generated Successfully! ✅';
+   btn.innerText='✨ Generate Video →';
+   btn.disabled=false;
+ }catch(e){
+   st.innerHTML='❌ Error: '+e.message+'<br><small>Check Vercel logs, maybe model is loading, try again in 30s</small>';
+   btn.innerText='✨ Generate Video →';
+   btn.disabled=false;
+ }
 }
 </script>
 </body>
