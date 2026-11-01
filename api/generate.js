@@ -1,51 +1,96 @@
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Use POST' });
-
-  const { prompt } = req.body;
-  if (!prompt) return res.status(400).json({ error: 'No prompt' });
-
-  const HF_TOKEN = process.env.HF_TOKEN;
-  if (!HF_TOKEN) {
-    return res.status(500).json({ error: 'Missing HF_TOKEN in Vercel Settings' });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
   }
 
   try {
-    const response = await fetch(
-      "https://api-inference.huggingface.co/models/damo-vilab/modelscope-text-to-video-synthesis",
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${HF_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ inputs: prompt }),
+    const { prompt, image } = req.body
+    const FAL_KEY = process.env.FAL_KEY
+
+    if (!FAL_KEY) {
+      return res.status(500).json({ error: 'FAL_KEY missing in Vercel' })
+    }
+
+    const finalPrompt = prompt || 'cinematic motion, slow zoom, highly detailed, 8k'
+
+    // نختارو الموديل
+    let endpoint = ''
+    let payload = {}
+
+    if (image) {
+      // عندك صورة -> Kling
+      endpoint = 'https://queue.fal.run/fal-ai/kling-video/v2.1/master/image-to-video'
+      payload = {
+        prompt: finalPrompt,
+        image_url: image,
+        duration: "5",
+        aspect_ratio: "16:9"
       }
-    );
-
-    if (response.status === 503) {
-      return res.status(503).json({ error: 'Model is loading, wait 30s and try again' });
+    } else {
+      // غير نص -> Minimax
+      endpoint = 'https://queue.fal.run/fal-ai/minimax-video-01'
+      payload = {
+        prompt: finalPrompt,
+        prompt_optimizer: true
+      }
     }
 
-    if (!response.ok) {
-      const txt = await response.text();
-      return res.status(500).json({ error: `HF Error: ${txt.slice(0,200)}` });
+    // Step 1: Submit
+    const submitRes = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Key ${FAL_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
+
+    const submitData = await submitRes.json()
+    if (!submitRes.ok) {
+      console.error(submitData)
+      return res.status(500).json({ error: JSON.stringify(submitData) })
     }
 
-    const blob = await response.blob();
-    const arrayBuffer = await blob.arrayBuffer();
-    const base64 = Buffer.from(arrayBuffer).toString('base64');
+    const requestId = submitData.request_id
+    const statusEndpoint = endpoint.includes('kling') 
+      ? `https://queue.fal.run/fal-ai/kling-video/requests/${requestId}/status`
+      : `https://queue.fal.run/fal-ai/minimax-video-01/requests/${requestId}/status`
     
-    res.status(200).json({ 
-      video: `data:video/mp4;base64,${base64}`,
-      success: true 
-    });
+    const resultEndpoint = endpoint.includes('kling')
+      ? `https://queue.fal.run/fal-ai/kling-video/requests/${requestId}`
+      : `https://queue.fal.run/fal-ai/minimax-video-01/requests/${requestId}`
+
+    // Step 2: Poll حتى يكمل
+    let tries = 0
+    let videoUrl = ''
+    while (tries < 40) {
+      await new Promise(r => setTimeout(r, 3000))
+      const sRes = await fetch(statusEndpoint, {
+        headers: { 'Authorization': `Key ${FAL_KEY}` }
+      })
+      const sData = await sRes.json()
+      
+      if (sData.status === 'COMPLETED') {
+        const rRes = await fetch(resultEndpoint, {
+          headers: { 'Authorization': `Key ${FAL_KEY}` }
+        })
+        const rData = await rRes.json()
+        videoUrl = rData.video?.url || rData.data?.video?.url || rData.video_url || ''
+        break
+      } else if (sData.status === 'FAILED') {
+        return res.status(500).json({ error: 'Video generation failed', details: sData })
+      }
+      tries++
+    }
+
+    if (!videoUrl) {
+      return res.status(500).json({ error: 'Timeout - try again' })
+    }
+
+    return res.status(200).json({ video: videoUrl })
 
   } catch (e) {
-    res.status(500).json({ error: `fetch failed: ${e.message}` });
+    console.error(e)
+    return res.status(500).json({ error: 'fetch failed: ' + e.message })
   }
-}
+          }
